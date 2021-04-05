@@ -1,0 +1,65 @@
+version: "3"
+
+services:
+  vote:
+    build: ./vote
+    command: python app.py
+    volumes:
+     - ./vote:/app
+    ports:
+      - "5000:80"
+    networks:
+      - front-tier
+      - back-tier
+
+  result:
+    build: ./result
+    # Updates:
+    #   Nov 2019: Newer versions of nodemon use --inspect instead of --debug
+    command: nodemon --inspect server.js
+    volumes:
+      - ./result:/app
+    ports:
+      - "5001:80"
+    networks:
+      - front-tier
+      - back-tier
+    # Updates:
+    #   Feb 2020: Check the .env file for more details
+    env_file:
+      - '.env'
+
+  worker:
+    build: ./worker
+    networks:
+      - back-tier
+    # Updates:
+    #   Feb 2020: Check the .env file for more details
+    env_file:
+      - '.env'
+
+  redis:
+    # Updates:
+    #   Feb 2020: Bumping Redis to the latest version as of this update
+    image: 'redis:5.0.7-alpine'
+    ports: ["6379"]
+    networks:
+      - back-tier
+
+  db:
+    image: postgres:9.4
+    volumes:
+      - "db-data:/var/lib/postgresql/data"
+    networks:
+      - back-tier
+    # Updates:
+    #   Feb 2020: Check the .env file for more details
+    env_file:
+      - '.env'
+
+volumes:
+  db-data:
+
+networks:
+  front-tier:
+  back-tier:
